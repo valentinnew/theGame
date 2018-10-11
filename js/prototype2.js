@@ -1,15 +1,14 @@
 (function() {
 
-    // нарисовать оси координат (слева направо, снизу вверх)
-    // нарисовать разные графики (окружность, квадрат, прямоугольник и пр.)
+    // @todo точки толще, чем линии. понять почему и исправить
 
 
     function drawAxe(ctx, config) {
         ctx.beginPath();
-        ctx.moveTo(Math.ceil(config.width/2), 0);
-        ctx.lineTo(Math.ceil(config.width/2), config.height);
-        ctx.moveTo(0, Math.ceil(config.height/2));
-        ctx.lineTo(config.width, Math.ceil(config.height/2));
+        ctx.moveTo(Math.ceil(config.width/2) + 0.5, 0.5);
+        ctx.lineTo(Math.ceil(config.width/2) + 0.5, config.height);
+        ctx.moveTo(0.5, Math.ceil(config.height/2) + 0.5);
+        ctx.lineTo(config.width + 0.5, Math.ceil(config.height/2) + 0.5);
         ctx.strokeStyle = "#000000";
         ctx.stroke();
 
@@ -53,42 +52,33 @@
         for (let xPos = 0; xPos <= maxXPos; xPos = xPos + config.step) {
             let xCoord = toCoord(xPos, config);
             let yCoords = calc.call(this, xCoord[0], xCoord[1]);
-
-            console.log(xCoord, yCoords[0], yCoords[1]);
-
             for (let yIndex in yCoords) {
                 if (!yCoords.hasOwnProperty(yIndex)) {
                     continue;
                 }
                 if (typeof yCoords[yIndex] === 'object') {
                     let isStart = true;
-                    ctx.beginPath();
-                    for (let yyIndex in yCoords[yIndex]) {
-                        if (!yCoords[yIndex].hasOwnProperty(yyIndex)) {
-                            continue;
-                        }
-                        if (isNaN(yCoords[yIndex][yyIndex])) {
-                            continue;
-                        }
-
-                        let yy = yCoords[yIndex][yyIndex]/scale;
-                        let yPos = Math.ceil(-yy + config.height/2);
-                        if (yPos < 0) {
-                            yPos = 0;
-                        } else if (yPos > maxYPos) {
-                            yPos = maxYPos;
-                        }
-
-                        if (isStart) {
-                            isStart = false;
-                            ctx.moveTo(xPos, yPos);
-                        } else {
-                            ctx.lineTo(xPos, yPos);
-                        }
+                    if (isNaN(yCoords[yIndex][0])
+                        || isNaN(yCoords[yIndex][1])
+                    ) {
+                        continue;
                     }
-                    ctx.closePath();
-                    ctx.strokeStyle = "#FF0000";
-                    ctx.stroke();
+
+                    let yFrom = yCoords[yIndex][0]/scale;
+                    let yTo = yCoords[yIndex][1]/scale;
+                    let yPosFrom = Math.ceil(-yFrom + config.height/2);
+                    let yPosTo = Math.ceil(-yTo + config.height/2);
+
+                    if (Math.abs(yPosFrom - yPosTo) <= 1) {
+                        ctx.fillRect(xPos + 0.5, yPosFrom + 0.5, 1, 1);
+                    } else {
+                        ctx.beginPath();
+                        ctx.strokeStyle = "#FF0000";
+                        ctx.moveTo(xPos + 0.5, yPosFrom + 0.5);
+                        ctx.lineTo(xPos + 0.5, yPosTo + 0.5);
+                        ctx.closePath();
+                        ctx.stroke();
+                    }
                 } else {
                     let yPos = getYPos(yCoords[yIndex], config);
                     if (yPos !== false) {
@@ -150,7 +140,7 @@
                 return [];
             }
 
-            return [1/x];
+            return [1/xFrom];
         },
     };
 
@@ -158,8 +148,7 @@
         width: 1000,
         height: 600,
         scale: 1/100,
-        step: 2,
-
+        step: 1,
     };
 
     let canvas = document.getElementById("canvas");
