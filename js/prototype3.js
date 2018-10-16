@@ -1,23 +1,29 @@
 (function() {
-    function game()
+    function game(points)
     {
+        let canvas = document.getElementById('canvas');
+        let ctx = canvas.getContext('2d');
         requestAnimationFrame(function draw() {
-            drawPoint(point);
+            for (let i in points) {
+                if (!points.hasOwnProperty(i)) {
+                    continue;
+                }
+                drawPoint(points[i], ctx);
+            }
             requestAnimationFrame(draw);
         });
     }
 
-    function drawPoint(point) {
+    function drawPoint(point, ctx) {
         let newPosition = point.calcPosition((new Date()).getTime());
         if (!point.isPositionChanged(newPosition)) {
             return;
         }
-        point.clear();
-        point.draw(newPosition);
+        point.clear(ctx);
+        point.draw(newPosition, ctx);
     }
 
-    let Point = function(ctx, config) {
-        this.ctx = ctx;
+    let Point = function(config) {
         this.position = {
             time: undefined,
             x: undefined,
@@ -25,6 +31,38 @@
             start: undefined,
         };
         this.config = config;
+    };
+
+    Point.prototype.isPositionChanged = function(position) {
+        return (
+            (
+                position.time !== undefined
+                && position.x !== undefined
+                && position.y !== undefined
+                && position.speed !== undefined
+            ) && (
+                position.time !== this.position.time
+                || position.x !== this.position.x
+                || position.y !== this.position.y
+            )
+        );
+    };
+
+    Point.prototype.clear = function(ctx) {
+        if (this.position.time === undefined
+            || this.position.x === undefined
+            || this.position.y === undefined
+        ) {
+            return;
+        }
+
+        ctx.clearRect(this.position.x - 2, this.position.y - 2, 8, 8);
+    };
+
+    Point.prototype.draw = function(position, ctx) {
+        this.position = position;
+        ctx.fillStyle = "#FF0000";
+        ctx.fillRect(position.x, position.y, 4, 4);
     };
 
     Point.prototype.calcPosition = function(mtime) {
@@ -47,7 +85,7 @@
             // направление (буду делать пром расчеты)
             if ((startPosition.x > 150 && direction === 0)
                 || (startPosition.x < 50 && direction === 180)) {
-                direction = (direction + 180)%360;
+                direction = (direction + 180) % 360;
             }
 
             return {
@@ -84,41 +122,7 @@
         }
     };
 
-    Point.prototype.isPositionChanged = function(position) {
-        return (
-            (
-                position.time !== undefined
-                && position.x !== undefined
-                && position.y !== undefined
-                && position.speed !== undefined
-            ) && (
-                position.time !== this.position.time
-                || position.x !== this.position.x
-                || position.y !== this.position.y
-            )
-        );
-    };
-
-    Point.prototype.clear = function() {
-        if (this.position.time === undefined
-            || this.position.x === undefined
-            || this.position.y === undefined
-        ) {
-            return;
-        }
-
-        ctx.clearRect(this.position.x - 2, this.position.y - 2, 8, 8);
-    };
-
-    Point.prototype.draw = function(position) {
-        this.position = position;
-        this.ctx.fillStyle = "#FF0000";
-        this.ctx.fillRect(position.x, position.y, 4, 4);
-    };
-
-    let canvas = document.getElementById('canvas');
-    let ctx = canvas.getContext('2d');
-    let point = new Point(ctx, {
+    let point1 = new Point({
         start: {
             x: 100,
             y: 100,
@@ -126,5 +130,13 @@
             direction: 0,
         },
     });
-    game();
+    let point2 = new Point({
+        start: {
+            x: 100,
+            y: 50,
+            speed: 150,
+            direction: 180,
+        },
+    });
+    game([point1, point2]);
 })();
