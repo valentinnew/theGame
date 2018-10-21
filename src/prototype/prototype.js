@@ -66,21 +66,11 @@
 
     function draw(ctx, config, params)
     {
-        calcPosition(config, params);
         ctx.clearRect(0, 0, config.width, config.height);
 
         drawBg(ctx, config, params);
         drawFPS(ctx, config, params);
         drawCar(ctx, config, params);
-    }
-
-    function calcPosition()
-    {
-
-
-
-
-
     }
 
     let drawFPS = (function() {
